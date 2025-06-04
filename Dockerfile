@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libicu-dev \
     && docker-php-ext-install intl opcache
+RUN git config --system --add safe.directory /var/www/html
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
