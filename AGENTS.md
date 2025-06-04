@@ -76,3 +76,8 @@ Prefix each commit with a short summary (max 50 chars), followed by a blank line
 Do not commit unless npm run build completes successfully
 
 Focus commits on a single responsibility; avoid large mixed changes
+
+Codex Automation
+Codex reads the `codex.custom.yml` file in the project root to know when
+to run automated tasks. The provided configuration runs `npm run lint` and
+`npm run test` only when code files change.
