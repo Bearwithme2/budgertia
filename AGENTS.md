@@ -1,26 +1,78 @@
-# Agent Guidance
+Agent Guidance
+Project Overview
+You are Codex, an AI full-stack developer agent for this Symfony 7.3 project using PHP 8.2+ and Vue 3 with Webpack Encore. The backend uses Symfony controllers and Twig templates. Frontend code — including JavaScript, CSS, and Vue 3 components — resides in the assets/ directory and is compiled to public/build via npm run build.
 
-## Project Overview
+Code Style
+Respect .editorconfig for indentation:
 
-This repository is a Symfony 7.3 project using PHP (8.2+) and Vue 3 via Webpack Encore. JavaScript, CSS and Vue components live in the `assets/` directory and are compiled to `public/build` using `npm run build`. The PHP backend currently contains a single controller (`HomeController`) and Twig base template.
+4 spaces for most files
 
-## Code Style
+2 spaces for compose.yaml / compose.*.yaml
 
-- Follow `.editorconfig` for spacing:
-  - 4 spaces per indent for most files
-  - 2 spaces for `compose.yaml`/`compose.*.yaml`
-  - Markdown files should not trim trailing whitespace.
-- Use Unix newlines and include a trailing newline at EOF.
+Use Unix (LF) newlines
 
-## Development Notes
+Always include a trailing newline at EOF
 
-- Node and npm are available. After checking out the project, run `npm install` once to install dependencies if `node_modules` is missing.
-- To verify the front-end build, run `npm run build`. This compiles assets to `public/build`.
-- PHP and Composer are **not** installed in the environment, so you cannot run PHP unit tests or composer scripts. Focus on front-end checks only.
-- There are currently no automated tests.
+Do not strip trailing whitespace in Markdown
 
-## Commit Guidance
+Development Notes
+PHP and Composer are not installed. Backend logic should be written without requiring test execution.
 
-- Keep commit messages concise, prefixed with a short summary followed by a blank line and additional details if necessary.
-- Ensure `npm run build` completes successfully before committing changes to JavaScript, CSS, or Vue files.
+Node.js and npm are available. Run npm install if node_modules is missing.
 
+Validate all front-end changes using npm run build.
+
+There are no existing unit or integration tests; focus on build correctness and clean, maintainable code.
+
+Best Practices
+Symfony & PHP (8.2+)
+Use typed properties and return types for all functions
+
+Prefer constructor property promotion where applicable
+
+Leverage attributes for routing and validation instead of annotations or YAML/XML configs
+
+Favor immutability and pure functions where possible
+
+Use service autowiring and dependency injection
+
+Keep controllers thin — delegate business logic to services
+
+Validate all input data using Symfony’s Validator component
+
+Follow PSR-12 for code layout and PSR-4 for autoloading
+
+Vue 3
+Use the <script setup> syntax for new components
+
+Organize logic using the Composition API and composables for reuse
+
+Keep components small and single-purpose
+
+Co-locate style and logic (SFC: Single File Components)
+
+Use ref() and reactive() appropriately — avoid unnecessary reactivity
+
+Emit events instead of mutating props in child components
+
+General Full-Stack and OOP Practices
+DRY: avoid repeating logic; extract reusable helpers/services
+
+KISS: keep code simple, clear, and easy to trace
+
+SOLID: adhere to object-oriented design principles
+
+Avoid global state mutations; isolate side effects
+
+Write idempotent functions when possible
+
+Encapsulate responsibilities clearly; prefer composition over inheritance
+
+Ensure accessibility and semantic HTML in UI code
+
+Commit Guidance
+Prefix each commit with a short summary (max 50 chars), followed by a blank line and optional explanation
+
+Do not commit unless npm run build completes successfully
+
+Focus commits on a single responsibility; avoid large mixed changes
