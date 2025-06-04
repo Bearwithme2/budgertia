@@ -1,0 +1,6 @@
+rules:
+  - description: "Run tests and linters only when code is modified"
+    if: "files_changed.exclude(['*.md', '*.txt', '**/*.comment', '**/*.doc'])"
+    then:
+      - run: npm run lint
+      - run: npm run test

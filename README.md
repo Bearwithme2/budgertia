@@ -1,7 +1,9 @@
 # Budgertia
 
 This project is a small Symfony 7 application with a Vue 3 frontend built
-using Webpack Encore. Docker images are provided for local development.
+using Webpack Encore. Docker images are provided for local development. The
+backend stores data in a SQLite database and Doctrine migrations are included
+to manage the schema.
 
 ## Prerequisites
 
@@ -31,9 +33,17 @@ using Webpack Encore. Docker images are provided for local development.
 
 The application will be available at [http://localhost:8000](http://localhost:8000).
 
+## Database & Migrations
+
+Run Doctrine migrations after installing the PHP dependencies:
+
+```bash
+docker compose run --rm app php bin/console doctrine:migrations:migrate
+```
+
 ## Testing and Code Quality
 
-Run the following commands inside the container to execute the test suite and quality tools:
+Run the following commands inside the container to execute the test suite and quality tools. Codex uses `codex.custom.yml` to run these commands only when code changes:
 
 ```bash
 docker compose run --rm app composer test
