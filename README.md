@@ -30,3 +30,13 @@ using Webpack Encore. Docker images are provided for local development.
    ```
 
 The application will be available at [http://localhost:8000](http://localhost:8000).
+
+## Testing and Code Quality
+
+Run the following commands inside the container to execute the test suite and quality tools:
+
+```bash
+docker compose run --rm app composer test
+docker compose run --rm app composer phpstan
+docker compose run --rm app composer phpcs
+```
