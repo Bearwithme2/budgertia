@@ -20,15 +20,19 @@ class User
     #[ORM\Column]
     private string $password;
 
+    /** @var Collection<int, Transaction> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Transaction::class)]
     private Collection $transactions;
 
+    /** @var Collection<int, BudgetLimit> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: BudgetLimit::class)]
     private Collection $budgetLimits;
 
+    /** @var Collection<int, SavingsGoal> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: SavingsGoal::class)]
     private Collection $savingsGoals;
 
+    /** @var Collection<int, Notification> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Notification::class)]
     private Collection $notifications;
 
@@ -69,8 +73,35 @@ class User
         return $this;
     }
 
+    /**
+     * @return Collection<int, Transaction>
+     */
     public function getTransactions(): Collection
     {
         return $this->transactions;
+    }
+
+    /**
+     * @return Collection<int, BudgetLimit>
+     */
+    public function getBudgetLimits(): Collection
+    {
+        return $this->budgetLimits;
+    }
+
+    /**
+     * @return Collection<int, SavingsGoal>
+     */
+    public function getSavingsGoals(): Collection
+    {
+        return $this->savingsGoals;
+    }
+
+    /**
+     * @return Collection<int, Notification>
+     */
+    public function getNotifications(): Collection
+    {
+        return $this->notifications;
     }
 }
