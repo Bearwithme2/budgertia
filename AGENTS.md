@@ -16,7 +16,7 @@ Always include a trailing newline at EOF
 Do not strip trailing whitespace in Markdown
 
 Development Notes
-PHP and Composer are not installed. Backend logic should be written without requiring test execution.
+PHP 8.2, Composer and Docker are available via `.setup/setup.sh`. Use Docker Compose to run backend tests and quality tools.
 
 Node.js and npm are available. Run npm install if node_modules is missing.
 
@@ -79,5 +79,6 @@ Focus commits on a single responsibility; avoid large mixed changes
 
 Codex Automation
 Codex reads the `codex.custom.yml` file in the project root to know when
-to run automated tasks. The provided configuration runs `npm run lint` and
-`npm run test` only when code files change.
+to run automated tasks. The configuration triggers `npm run lint`, `npm run test`,
+and Docker-based Composer commands for PHPUnit, PHPStan and PHPCS whenever code
+files change.
