@@ -24,8 +24,6 @@
         "doctrine/dbal": "^3",
         "doctrine/orm": "*",
         "doctrine/doctrine-bundle": "^2.10",
-
-        /* ▶ CHANGE ◀  – stay on the latest stable 3.x release */
         "doctrine/doctrine-migrations-bundle": "^3.4"
     },
 
