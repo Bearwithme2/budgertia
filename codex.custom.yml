@@ -4,6 +4,6 @@ rules:
     then:
       - run: npm run lint
       - run: npm run test
-      - run: docker compose run --rm app composer test
-      - run: docker compose run --rm app composer phpstan
-      - run: docker compose run --rm app composer phpcs
+      - run: composer test
+      - run: composer phpstan
+      - run: composer phpcs
