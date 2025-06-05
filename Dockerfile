@@ -12,39 +12,44 @@ COPY webpack.config.js ./
 RUN npm run build
 
 
+
 ###########################
 # 2. PHP-FPM run-time     #
 ###########################
 FROM php:8.2-fpm
 
-# ––––– Build-time args let us inject your host UID/GID –––––
+# Inject host UID/GID so files created in the container
+# match permissions on the host bind-mount
 ARG UID=1000
 ARG GID=1000
 
-# Basic tools + PHP extensions
+# ── Base tools + PHP extensions ────────────────────────────
 RUN apt-get update && apt-get install -y \
         git unzip libicu-dev \
     && docker-php-ext-install intl opcache
 
-# Create matching user/group inside the image
+# ── Non-root user matching host ────────────────────────────
 RUN groupadd -g ${GID} app \
  && useradd  -m -u ${UID} -g app app
 
-# Trust the project directory for every Git user in the image
+# ── Git safety for bind-mounted working tree ───────────────
 RUN git config --system --add safe.directory /var/www/html
 
-# Composer binary from the official image
+# ── Composer binary ────────────────────────────────────────
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-###########################
-# 3. Application files    #
-###########################
+# ── Writable Composer cache for the non-root user ──────────
+ENV COMPOSER_HOME=/home/app/.composer
+RUN mkdir -p $COMPOSER_HOME/cache && chown -R app:app $COMPOSER_HOME
+
+# ── Project sources ────────────────────────────────────────
 WORKDIR /var/www/html
 COPY . .
 COPY --from=frontend /app/public/build ./public/build
+RUN chown -R app:app /var/www/html       # make sources writable
 
-# Install PHP deps (dev packages will be pulled if APP_ENV ≠ prod)
+# ── Switch to non-root and install PHP deps ────────────────
+USER app
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-USER app            # run everything as the non-root user
 CMD ["php-fpm"]
