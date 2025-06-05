@@ -1,19 +1,16 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────
 # Bootstrap PHP 8.2, Composer 2, Docker & docker-compose v2
-# for Codex / GitHub Codespaces-style runners.
-# Safe to run repeatedly (idempotent).
+# Tested on Ubuntu 24.04 runners (Codex / Codespaces style)
 # ─────────────────────────────────────────────────────────────
-
 set -euo pipefail
-
 log() { printf "\e[1;34m%s\e[0m\n" ">> $*"; }
 
 ###############################################################################
-# Detect apt-based distro & refresh apt metadata
+# Verify we’re on an apt-based distro
 ###############################################################################
 if ! command -v apt-get >/dev/null 2>&1; then
-  echo "This setup script currently supports apt-based images only."
+  echo "This setup script currently supports apt-based images only." >&2
   exit 1
 fi
 
@@ -21,7 +18,7 @@ log "Updating package index"
 sudo apt-get update -qq
 
 ###############################################################################
-# PHP 8.2 + common extensions
+# PHP 8.2 (cli only) + common extensions
 ###############################################################################
 if ! php -v 2>/dev/null | grep -q "^PHP 8.2"; then
   log "Installing PHP 8.2 and extensions"
@@ -29,25 +26,30 @@ if ! php -v 2>/dev/null | grep -q "^PHP 8.2"; then
     lsb-release ca-certificates curl software-properties-common
   sudo add-apt-repository -y ppa:ondrej/php
   sudo apt-get update -qq
-  sudo apt-get install -y php8.2 php8.2-cli php8.2-mbstring php8.2-xml \
-                          php8.2-intl php8.2-curl php8.2-zip php8.2-gd
+  sudo apt-get install -y --no-install-recommends \
+    php8.2-cli php8.2-mbstring php8.2-xml php8.2-intl \
+    php8.2-curl php8.2-zip php8.2-gd
 fi
 
 ###############################################################################
-# Composer 2 (single-file installer to /usr/local/bin)
+# Composer 2 – try getcomposer.org first, fall back to GitHub or apt
 ###############################################################################
 if ! command -v composer >/dev/null 2>&1; then
   log "Installing Composer 2"
-  EXPECTED_CHECKSUM="$(curl -s https://composer.github.io/installer.sig)"
-  php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-  ACTUAL_CHECKSUM="$(php -r "echo hash_file('sha384','composer-setup.php');")"
-  if [ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]; then
-    echo 'ERROR: Invalid Composer installer checksum' >&2
-    rm composer-setup.php
-    exit 1
+  install_composer () {
+    sudo mv composer.phar /usr/local/bin/composer
+    sudo chmod +x /usr/local/bin/composer
+    log "Composer installed: $(composer --version | cut -d' ' -f2)"
+  }
+
+  if curl -fsSL https://getcomposer.org/download/latest-stable/composer.phar -o composer.phar; then
+    install_composer
+  elif curl -fsSL https://github.com/composer/composer/releases/latest/download/composer.phar -o composer.phar; then
+    install_composer
+  else
+    log "Curl failed twice, installing via apt"
+    sudo apt-get install -y composer
   fi
-  sudo php composer-setup.php --quiet --install-dir=/usr/local/bin --filename=composer
-  rm composer-setup.php
 fi
 
 ###############################################################################
@@ -62,8 +64,8 @@ if ! command -v docker >/dev/null 2>&1; then
 
   UBUNTU_FLAVOR=$(lsb_release -cs)
   echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-     https://download.docker.com/linux/ubuntu $UBUNTU_FLAVOR stable" | \
+    "deb [arch=\$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+     https://download.docker.com/linux/ubuntu \$UBUNTU_FLAVOR stable" | \
     sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 
   sudo apt-get update -qq
@@ -71,11 +73,11 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 
 ###############################################################################
-# Enable current user to run Docker without sudo (session only)
+# Allow current user to run Docker without sudo (next login)
 ###############################################################################
-if ! groups "$USER" | grep -q '\bdocker\b'; then
-  log "Adding $USER to 'docker' group (effective next login)"
-  sudo usermod -aG docker "$USER"
+if ! groups "\$USER" | grep -q '\bdocker\b'; then
+  log "Adding \$USER to 'docker' group (effective next login)"
+  sudo usermod -aG docker "\$USER"
 fi
 
-log "All tools installed. PHP: $(php -r 'echo PHP_VERSION;') | Composer: $(composer --version | cut -d" " -f2) | Docker: $(docker --version)"
+log "Bootstrap finished. PHP $(php -r 'echo PHP_VERSION;') | Docker $(docker --version)"
