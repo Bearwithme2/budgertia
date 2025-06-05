@@ -3,7 +3,7 @@ set -euo pipefail
 
 sudo apt-get update -qq
 
-# PHP 8.2 CLI + common extensions
+# Install PHP 8.2 CLI + common extensions
 if ! php -v 2>/dev/null | grep -q '^PHP 8\.2'; then
   sudo apt-get install -y lsb-release ca-certificates curl software-properties-common
   sudo add-apt-repository -y ppa:ondrej/php
@@ -12,7 +12,7 @@ if ! php -v 2>/dev/null | grep -q '^PHP 8\.2'; then
     php8.2-cli php8.2-mbstring php8.2-xml php8.2-intl php8.2-curl php8.2-zip php8.2-gd
 fi
 
-# Composer 2
+# Install Composer 2
 if ! command -v composer >/dev/null 2>&1; then
   curl -fsSL https://getcomposer.org/download/latest-stable/composer.phar -o composer.phar || \
   curl -fsSL https://github.com/composer/composer/releases/latest/download/composer.phar -o composer.phar || \
@@ -20,28 +20,3 @@ if ! command -v composer >/dev/null 2>&1; then
   sudo mv composer.phar /usr/local/bin/composer
   sudo chmod +x /usr/local/bin/composer
 fi
-
-# Docker Engine + CLI plugin
-if ! command -v docker >/dev/null 2>&1; then
-  sudo install -m 0755 -d /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  sudo chmod a+r /etc/apt/keyrings/docker.gpg
-  UBUNTU_FLAVOR=$(lsb_release -cs)
-  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu ${UBUNTU_FLAVOR} stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
-  sudo apt-get update -qq
-  sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-fi
-
-# Add current user to docker group
-current_user=$(id -un)
-groups "$current_user" | grep -q '\bdocker\b' || sudo usermod -aG docker "$current_user"
-
-# Start dockerd in rootless-friendly mode (no bridge / iptables)
-sudo pkill dockerd || true
-sudo dockerd --host=unix:///var/run/docker.sock \
-             --storage-driver=vfs \
-             --bridge=none \
-             --iptables=false \
-             --ip-masq=false \
-             >/tmp/dockerd.log 2>&1 &
-sleep 5
