@@ -5,9 +5,11 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -19,6 +21,12 @@ class User
 
     #[ORM\Column]
     private string $password;
+
+    /**
+     * @var string[]
+     */
+    #[ORM\Column(type: 'json')]
+    private array $roles = [];
 
     /** @var Collection<int, Transaction> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Transaction::class)]
@@ -42,6 +50,7 @@ class User
         $this->budgetLimits = new ArrayCollection();
         $this->savingsGoals = new ArrayCollection();
         $this->notifications = new ArrayCollection();
+        $this->roles = [];
     }
 
     public function getId(): ?int
@@ -71,6 +80,39 @@ class User
         $this->password = $password;
 
         return $this;
+    }
+
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    /**
+     * @param string[] $roles
+     */
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * @return non-empty-string
+     */
+    public function getUserIdentifier(): string
+    {
+        \assert($this->email !== '');
+
+        return $this->email;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // no temporary sensitive data stored
     }
 
     /**
