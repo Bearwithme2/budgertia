@@ -17,9 +17,11 @@ class Category
     #[ORM\Column(length: 100)]
     private string $name;
 
+    /** @var Collection<int, Transaction> */
     #[ORM\OneToMany(mappedBy: 'category', targetEntity: Transaction::class)]
     private Collection $transactions;
 
+    /** @var Collection<int, BudgetLimit> */
     #[ORM\OneToMany(mappedBy: 'category', targetEntity: BudgetLimit::class)]
     private Collection $budgetLimits;
 
@@ -46,8 +48,19 @@ class Category
         return $this;
     }
 
+    /**
+     * @return Collection<int, Transaction>
+     */
     public function getTransactions(): Collection
     {
         return $this->transactions;
+    }
+
+    /**
+     * @return Collection<int, BudgetLimit>
+     */
+    public function getBudgetLimits(): Collection
+    {
+        return $this->budgetLimits;
     }
 }
