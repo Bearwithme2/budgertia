@@ -51,3 +51,5 @@ docker compose run --rm app composer test
 docker compose run --rm app composer phpstan
 docker compose run --rm app composer phpcs
 ```
+
+See `docs/API_USAGE.md` for REST API usage.
