@@ -8,6 +8,7 @@ to manage the schema.
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) with Compose support
+- PHP 8.2 and Composer (provided by `.setup/setup.sh`)
 - Node.js 18+ and npm
 
 ## Installation
