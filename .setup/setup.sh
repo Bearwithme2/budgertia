@@ -13,7 +13,8 @@ if ! command -v composer >/dev/null 2>&1; then
   curl -fsSL https://getcomposer.org/download/latest-stable/composer.phar -o composer.phar || \
   curl -fsSL https://github.com/composer/composer/releases/latest/download/composer.phar -o composer.phar || \
   { sudo apt-get install -y composer && exit 0; }
-  sudo mv composer.phar /usr/local/bin/composer && sudo chmod +x /usr/local/bin/composer
+  sudo mv composer.phar /usr/local/bin/composer
+  sudo chmod +x /usr/local/bin/composer
 fi
 
 if ! command -v docker >/dev/null 2>&1; then
@@ -26,4 +27,5 @@ if ! command -v docker >/dev/null 2>&1; then
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
 
-groups "$USER" | grep -q '\bdocker\b' || sudo usermod -aG docker "$USER"
+current_user=$(id -un)
+groups "$current_user" | grep -q '\bdocker\b' || sudo usermod -aG docker "$current_user"
