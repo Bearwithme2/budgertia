@@ -16,7 +16,9 @@ You are Codex, an AI full-stack developer agent for this Symfony 7.3 project usi
 - Use Docker Compose to run the application. Execute quality tools through Composer:
   - `composer test`
   - `composer phpstan`
-  - `composer phpcs`
+- `composer phpcs`
+- Run Php Inspections (EA Extended) using [Qodana](https://github.com/JetBrains/qodana-cli) or the PhpStorm plugin. A basic command is:
+  `docker run --rm -v $(pwd):/data/project jetbrains/qodana-php --fail-threshold 0`
 - Node.js and npm are available. Run `npm install` if `node_modules` is missing.
 - Validate all front-end changes using `npm run build`.
 - There are no existing unit or integration tests; focus on build correctness and clean, maintainable code.
