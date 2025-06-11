@@ -20,6 +20,7 @@ You are Codex, an AI full-stack developer agent for this Symfony 7.3 project usi
 - Node.js and npm are available. Run `npm install` if `node_modules` is missing.
 - Validate all front-end changes using `npm run build`.
 - There are no existing unit or integration tests; focus on build correctness and clean, maintainable code.
+- Ensure the `/api/register` endpoint remains publicly accessible in `security.yaml` so new users can sign up without a token.
 
 ## Best Practices
 ### Symfony & PHP (8.2+)
