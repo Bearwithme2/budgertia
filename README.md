@@ -22,15 +22,21 @@ to manage the schema.
 
 2. Install PHP dependencies inside the container:
 
-   ```bash
-   docker compose run --rm app composer install
-   ```
+    ```bash
+docker compose run --rm app composer install
+    ```
 
-3. Start the stack:
+3. Generate JWT keys:
 
-   ```bash
-   docker compose up --build
-   ```
+    ```bash
+docker compose run --rm app php bin/console lexik:jwt:generate-keypair --no-interaction --skip-if-exists
+    ```
+
+4. Start the stack:
+
+    ```bash
+    docker compose up --build
+    ```
 
 The application will be available at [http://localhost:8000](http://localhost:8000).
 
@@ -56,3 +62,4 @@ npm run test
 ```
 
 See `docs/API_USAGE.md` for REST API usage.
+See `docs/JWT_KEYS.md` for generating JWT keys.
