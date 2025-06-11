@@ -9,9 +9,9 @@ All endpoints are prefixed with `/api` and require JWT authentication unless sta
 - `POST /api/token/refresh` – refresh a token
 
 ```bash
-curl -X POST -H "Content-Type: application/json" \
-     -d '{"email":"john@example.com","password":"secret"}' \
-     http://localhost:8000/api/register
+curl -X POST http://localhost:8000/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john@example.com","password":"secret"}'
 ```
 
 ## Category

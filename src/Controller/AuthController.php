@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Dto\UserRegistrationData;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTManager;
@@ -12,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AuthController extends AbstractController
@@ -20,19 +22,22 @@ class AuthController extends AbstractController
     public function register(
         Request $request,
         UserService $userService,
-        JWTManager $jwtManager
+        JWTManager $jwtManager,
+        ValidatorInterface $validator
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
         $payload = is_array($data) ? $data : [];
-        $email = isset($payload['email']) ? (string) $payload['email'] : '';
-        $password = isset($payload['password']) ? (string) $payload['password'] : '';
+        $dto = new UserRegistrationData(
+            (string) ($payload['email'] ?? ''),
+            (string) ($payload['password'] ?? '')
+        );
 
-        if ($email === '' || $password === '') {
+        $violations = $validator->validate($dto);
+        if (count($violations) > 0) {
             return new JsonResponse(['message' => 'Invalid data'], 400);
         }
-
         try {
-            $user = $userService->register($email, $password);
+            $user = $userService->register($dto->email, $dto->password);
         } catch (\RuntimeException $e) {
             return new JsonResponse(['message' => $e->getMessage()], 400);
         }
