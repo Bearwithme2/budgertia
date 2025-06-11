@@ -2,6 +2,18 @@
 
 All endpoints are prefixed with `/api` and require JWT authentication unless stated otherwise.
 
+## Auth
+
+- `POST /api/register` – create a user
+- `POST /api/login` – obtain a token
+- `POST /api/token/refresh` – refresh a token
+
+```bash
+curl -X POST http://localhost:8000/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john@example.com","password":"secret"}'
+```
+
 ## Category
 
 - `GET /api/categories` – list categories
