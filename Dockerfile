@@ -25,8 +25,8 @@ ARG GID=1000
 
 # ── Base tools + PHP extensions ────────────────────────────
 RUN apt-get update && apt-get install -y \
-        git unzip libicu-dev \
-    && docker-php-ext-install intl opcache
+        git unzip libicu-dev libsqlite3-dev \
+    && docker-php-ext-install intl opcache pdo pdo_sqlite
 
 # Remove user and group directives as PHP-FPM runs under the
 # non-root "app" user defined below. Leaving these directives
