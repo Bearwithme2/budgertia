@@ -8,7 +8,7 @@ use App\Entity\User;
 use App\Dto\UserRegistrationData;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTManager;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,7 +22,7 @@ class AuthController extends AbstractController
     public function register(
         Request $request,
         UserService $userService,
-        JWTManager $jwtManager,
+        JWTTokenManagerInterface $jwtManager,
         ValidatorInterface $validator
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
@@ -49,7 +49,7 @@ class AuthController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
-        JWTManager $jwtManager
+        JWTTokenManagerInterface $jwtManager
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
         $payload = is_array($data) ? $data : [];
@@ -70,7 +70,7 @@ class AuthController extends AbstractController
     public function refresh(
         Request $request,
         EntityManagerInterface $entityManager,
-        JWTManager $jwtManager
+        JWTTokenManagerInterface $jwtManager
     ): JsonResponse {
         $auth = $request->headers->get('Authorization');
         if (!$auth || !str_starts_with($auth, 'Bearer ')) {
