@@ -28,6 +28,11 @@ RUN apt-get update && apt-get install -y \
         git unzip libicu-dev \
     && docker-php-ext-install intl opcache
 
+# Remove user and group directives as PHP-FPM runs under the
+# non-root "app" user defined below. Leaving these directives
+# triggers noisy notices during container start-up.
+RUN sed -i '/^user =/d;/^group =/d' /usr/local/etc/php-fpm.d/www.conf
+
 # ── Non-root user matching host ────────────────────────────
 RUN groupadd -g ${GID} app \
  && useradd  -m -u ${UID} -g app app
