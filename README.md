@@ -50,6 +50,8 @@ Run the following commands inside the container to execute the test suite and qu
 docker compose run --rm app composer test
 docker compose run --rm app composer phpstan
 docker compose run --rm app composer phpcs
+npm run lint
+npm run test
 ```
 
 See `docs/API_USAGE.md` for REST API usage.
