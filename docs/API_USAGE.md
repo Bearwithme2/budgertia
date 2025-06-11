@@ -1,6 +1,6 @@
 # API Usage
 
-All endpoints are prefixed with `/api` and require JWT authentication unless stated otherwise.
+All endpoints are prefixed with `/api` and require JWT authentication unless stated otherwise. The `POST /api/register` route is publicly accessible so new users can create an account without a token.
 
 ## Auth
 
