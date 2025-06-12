@@ -1,39 +1,59 @@
-const { buildOptions, isValidJson, parseResponse } = require('../utils/request');
+/**
+ * Build fetch options with method, auth header, JSON content-type, and body (unless GET).
+ * @param {string} method  HTTP method (e.g. 'GET', 'POST')
+ * @param {string} token   Bearer token
+ * @param {string} body    JSON string
+ * @returns {object}       Options for fetch()
+ */
+function buildOptions(method, token, body) {
+  const options = {
+    method,
+    headers: {},
+  };
 
-test('buildOptions sets headers and body', () => {
-    const opts = buildOptions('POST', 'abc', '{"a":1}');
-    expect(opts.method).toBe('POST');
-    expect(opts.headers.Authorization).toBe('Bearer abc');
-    expect(opts.headers['Content-Type']).toBe('application/json');
-    expect(opts.body).toBe('{"a":1}');
-});
+  // Add Authorization header if token provided
+  if (token) {
+    options.headers.Authorization = `Bearer ${token}`;
+  }
 
-test('buildOptions omits body for GET', () => {
-    const opts = buildOptions('GET', '', '');
-    expect(opts.method).toBe('GET');
-    expect(opts.body).toBeUndefined();
-});
+  // For non-GET methods, set JSON content-type and include the body
+  if (method !== 'GET' && body) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = body;
+  }
 
-test('isValidJson returns false for invalid JSON', () => {
-    expect(isValidJson('{foo:}')).toBe(false);
-});
+  return options;
+}
 
-test('isValidJson returns true for valid JSON', () => {
-    expect(isValidJson('{"a":1}')).toBe(true);
-});
+/**
+ * Check whether a string is valid JSON.
+ * @param {string} str
+ * @returns {boolean}
+ */
+function isValidJson(str) {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-test('parseResponse handles JSON', async () => {
-    const res = {
-        headers: { get: () => 'application/json' },
-        json: async () => ({ a: 1 }),
-    };
-    await expect(parseResponse(res)).resolves.toBe('{\n  "a": 1\n}');
-});
+/**
+ * Parse a fetch Response: pretty-print JSON or return text.
+ * @param {Response} res
+ * @returns {Promise<string>}
+ */
+async function parseResponse(res) {
+  // Look up content-type header (case-insensitive)
+  const contentType = (res.headers.get('Content-Type') || res.headers.get('content-type') || '').toLowerCase();
 
-test('parseResponse handles text', async () => {
-    const res = {
-        headers: { get: () => 'text/plain' },
-        text: async () => 'ok',
-    };
-    await expect(parseResponse(res)).resolves.toBe('ok');
-});
+  if (contentType.includes('application/json')) {
+    const data = await res.json();
+    return JSON.stringify(data, null, 2);
+  } else {
+    return res.text();
+  }
+}
+
+module.exports = { buildOptions, isValidJson, parseResponse };

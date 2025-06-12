@@ -63,6 +63,7 @@ const error = ref('');
 const methods = ['GET', 'POST', 'PUT', 'DELETE'];
 
 function send() {
+  // Client-side validation
   if (!endpoint.value) {
     error.value = 'Endpoint is required';
     return;
@@ -72,9 +73,11 @@ function send() {
     return;
   }
 
+  // Reset before request
   status.value = null;
   response.value = '';
   error.value = '';
+
   const options = buildOptions(method.value, token.value, body.value);
   fetch(endpoint.value, options)
     .then(async res => {
@@ -104,4 +107,3 @@ pre {
   margin-top: 1em;
 }
 </style>
-
