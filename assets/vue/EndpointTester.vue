@@ -50,7 +50,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { buildOptions, isValidJson } from '../utils/request';
+import { buildOptions, isValidJson, parseResponse } from '../utils/request';
 
 const token = ref('');
 const method = ref('GET');
@@ -79,7 +79,7 @@ function send() {
   fetch(endpoint.value, options)
     .then(async res => {
       status.value = res.status;
-      response.value = await res.text();
+      response.value = await parseResponse(res);
     })
     .catch(err => {
       status.value = 0;

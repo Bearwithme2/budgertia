@@ -1,4 +1,4 @@
-const { buildOptions, isValidJson } = require('../utils/request');
+const { buildOptions, isValidJson, parseResponse } = require('../utils/request');
 
 test('buildOptions sets headers and body', () => {
     const opts = buildOptions('POST', 'abc', '{"a":1}');
@@ -20,4 +20,20 @@ test('isValidJson returns false for invalid JSON', () => {
 
 test('isValidJson returns true for valid JSON', () => {
     expect(isValidJson('{"a":1}')).toBe(true);
+});
+
+test('parseResponse handles JSON', async () => {
+    const res = {
+        headers: { get: () => 'application/json' },
+        json: async () => ({ a: 1 }),
+    };
+    await expect(parseResponse(res)).resolves.toBe('{\n  "a": 1\n}');
+});
+
+test('parseResponse handles text', async () => {
+    const res = {
+        headers: { get: () => 'text/plain' },
+        text: async () => 'ok',
+    };
+    await expect(parseResponse(res)).resolves.toBe('ok');
 });

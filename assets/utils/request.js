@@ -19,4 +19,16 @@ function isValidJson(str) {
     }
 }
 
-module.exports = { buildOptions, isValidJson };
+async function parseResponse(res) {
+    const ct = res.headers.get('Content-Type');
+    if (ct && ct.includes('application/json')) {
+        try {
+            return JSON.stringify(await res.json(), null, 2);
+        } catch (e) {
+            return res.statusText;
+        }
+    }
+    return await res.text();
+}
+
+module.exports = { buildOptions, isValidJson, parseResponse };
