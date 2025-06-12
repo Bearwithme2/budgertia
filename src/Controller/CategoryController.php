@@ -40,10 +40,13 @@ class CategoryController extends AbstractController
         return new JsonResponse($this->jsonApi->collection($items));
     }
 
+    /**
+     * @throws \JsonException
+     */
     #[Route('', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $payload = is_array($data) ? $data : [];
         $name = isset($payload['name']) ? (string) $payload['name'] : '';
 

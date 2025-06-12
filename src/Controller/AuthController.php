@@ -18,6 +18,9 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AuthController extends AbstractController
 {
+    /**
+     * @throws \JsonException
+     */
     #[Route('/api/register', name: 'api_register', methods: ['POST'])]
     public function register(
         Request $request,
@@ -25,7 +28,7 @@ class AuthController extends AbstractController
         JWTTokenManagerInterface $jwtManager,
         ValidatorInterface $validator
     ): JsonResponse {
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $payload = is_array($data) ? $data : [];
         $dto = new UserRegistrationData(
             (string) ($payload['email'] ?? ''),
@@ -44,6 +47,10 @@ class AuthController extends AbstractController
 
         return new JsonResponse(['token' => $jwtManager->create($user)], 201);
     }
+
+    /**
+     * @throws \JsonException
+     */
     #[Route('/api/login', name: 'api_login', methods: ['POST'])]
     public function login(
         Request $request,
@@ -51,7 +58,7 @@ class AuthController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         JWTTokenManagerInterface $jwtManager
     ): JsonResponse {
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $payload = is_array($data) ? $data : [];
         $email = $payload['email'] ?? '';
         $password = $payload['password'] ?? '';
