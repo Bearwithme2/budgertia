@@ -17,8 +17,14 @@ class Notification
     #[ORM\Column(length: 255)]
     private string $message;
 
+    #[ORM\Column(length: 50)]
+    private string $level = 'info';
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $isRead = false;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'notifications')]
     #[ORM\JoinColumn(nullable: false)]
@@ -41,6 +47,18 @@ class Notification
         return $this;
     }
 
+    public function getLevel(): string
+    {
+        return $this->level;
+    }
+
+    public function setLevel(string $level): self
+    {
+        $this->level = $level;
+
+        return $this;
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
@@ -49,6 +67,18 @@ class Notification
     public function setCreatedAt(\DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function isRead(): bool
+    {
+        return $this->isRead;
+    }
+
+    public function setIsRead(bool $isRead): self
+    {
+        $this->isRead = $isRead;
 
         return $this;
     }

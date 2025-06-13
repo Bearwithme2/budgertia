@@ -7,3 +7,4 @@ docker compose run --rm app php bin/console doctrine:migrations:migrate
 ```
 
 User roles are stored as a JSON array in the `roles` column added by `Version202501010002`. Run the migration after pulling updates.
+Notifications now include `level` and `is_read` columns added by `Version202501010003`.
