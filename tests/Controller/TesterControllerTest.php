@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpKernel\HttpKernelBrowser;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 class TesterControllerTest extends WebTestCase
 {
@@ -23,7 +23,7 @@ class TesterControllerTest extends WebTestCase
 
     public function testTesterPageLoads(): void
     {
-        /** @var HttpKernelBrowser $client */
+        /** @var KernelBrowser $client */
         $client = static::createClient();
         /* @phpstan-ignore-next-line */
         $client->request('GET', '/tester');

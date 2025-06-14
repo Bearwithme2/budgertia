@@ -6,7 +6,7 @@ namespace App\Tests\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpKernel\HttpKernelBrowser;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Doctrine\ORM\Tools\SchemaTool;
 
 class AuthControllerTest extends WebTestCase
@@ -34,7 +34,7 @@ class AuthControllerTest extends WebTestCase
 
     public function testRegisterEndpoint(): void
     {
-        /** @var HttpKernelBrowser $client */
+        /** @var KernelBrowser $client */
         $client = static::createClient();
         /* @phpstan-ignore-next-line */
         $client->request(
