@@ -6,7 +6,6 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Service\BudgetCalculatorInterface;
-use App\Service\JsonApi;
 use DateTimeImmutable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,10 +15,8 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api/budget-check')]
 final class BudgetCheckController extends AbstractController
 {
-    public function __construct(
-        private BudgetCalculatorInterface $calculator,
-        private JsonApi $jsonApi
-    ) {
+    public function __construct(private BudgetCalculatorInterface $calculator)
+    {
     }
 
     #[Route('', methods: ['GET'])]

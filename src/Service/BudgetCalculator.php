@@ -30,15 +30,15 @@ final class BudgetCalculator implements BudgetCalculatorInterface
             ->from(Transaction::class, 't')
             ->where('t.user = :user')
             ->andWhere('t.date BETWEEN :start AND :end')
-            ->groupBy('category')
-            ->setParameters([
-                'user' => $user,
-                'start' => $start,
-                'end' => $end,
-            ]);
+            ->groupBy('category');
+
+        $qb->setParameter('user', $user)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end);
 
         $spentData = [];
         foreach ($qb->getQuery()->getArrayResult() as $row) {
+            /** @var array{category: int|string|null, spent: int|string|null} $row */
             $catId = (int) $row['category'];
             $spentData[$catId] = (int) $row['spent'];
         }

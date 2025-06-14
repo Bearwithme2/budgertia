@@ -18,5 +18,9 @@ services:
 
     App\Service\BudgetCalculatorInterface: '@App\Service\BudgetCalculator'
 
+    App\Command\GenerateNotificationsCommand:
+        tags:
+            - { name: 'console.command', cron.schedule: '0 0 * * *' }
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

@@ -16,3 +16,6 @@ Use them to surface events like budget overruns.
 # list notifications
 curl -H "Authorization: Bearer <token>" http://localhost:8000/api/notifications
 ```
+
+Notifications are generated nightly by the `app:generate-notifications` command.
+Run it manually with `php bin/console app:generate-notifications`.

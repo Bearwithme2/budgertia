@@ -2,20 +2,25 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Controller;
+namespace App\Tests\Command;
 
 use App\Entity\BudgetLimit;
 use App\Entity\Category;
+use App\Entity\Notification;
+use App\Entity\SavingsGoal;
 use App\Entity\Transaction;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\HttpKernel\KernelInterface;
 
-class BudgetCheckControllerTest extends WebTestCase
+class GenerateNotificationsCommandTest extends KernelTestCase
 {
     private EntityManagerInterface $entityManager;
+    private Application $application;
 
     protected static function getKernelClass(): string
     {
@@ -24,7 +29,6 @@ class BudgetCheckControllerTest extends WebTestCase
 
     protected function setUp(): void
     {
-        self::ensureKernelShutdown();
         if (!extension_loaded('pdo_sqlite')) {
             self::markTestSkipped('pdo_sqlite missing');
         }
@@ -37,17 +41,19 @@ class BudgetCheckControllerTest extends WebTestCase
         $metadata = $this->entityManager->getMetadataFactory()->getAllMetadata();
         $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
+        \assert(self::$kernel instanceof KernelInterface);
+        $this->application = new Application(self::$kernel);
     }
 
-    public function testCheckEndpoint(): void
+    public function testNotificationsAreCreated(): void
     {
         $user = new User();
-        $user->setEmail('t@example.com');
+        $user->setEmail('cmd@example.com');
         $user->setPassword('x');
         $this->entityManager->persist($user);
 
         $category = new Category();
-        $category->setName('Food');
+        $category->setName('Misc');
         $this->entityManager->persist($category);
 
         $limit = new BudgetLimit();
@@ -59,24 +65,25 @@ class BudgetCheckControllerTest extends WebTestCase
         $transaction = new Transaction();
         $transaction->setUser($user);
         $transaction->setCategory($category);
-        $transaction->setAmount(50);
-        $transaction->setDescription('meal');
-        $transaction->setDate(new \DateTimeImmutable('2025-01-05'));
+        $transaction->setAmount(150);
+        $transaction->setDescription('big');
+        $transaction->setDate(new \DateTimeImmutable('first day of this month'));
         $this->entityManager->persist($transaction);
+
+        $goal = new SavingsGoal();
+        $goal->setUser($user);
+        $goal->setTargetAmount(200);
+        $goal->setCurrentAmount(200);
+        $this->entityManager->persist($goal);
 
         $this->entityManager->flush();
 
-        /** @var KernelBrowser $client */
-        $client = static::createClient();
-        $client->loginUser($user);
-        /* @phpstan-ignore-next-line */
-        $client->request('GET', '/api/budget-check?month=2025-01');
+        $command = $this->application->find('app:generate-notifications');
+        $tester = new CommandTester($command);
+        $exitCode = $tester->execute([]);
+        $this->assertSame(0, $exitCode);
 
-        $this->assertResponseIsSuccessful();
-        /* @phpstan-ignore-next-line */
-        $data = json_decode($client->getResponse()->getContent(), true);
-        \assert(is_array($data));
-        $this->assertSame(1, count($data['data']));
-        $this->assertSame(50, $data['data'][0]['spent']);
+        $notifications = $this->entityManager->getRepository(Notification::class)->findAll();
+        $this->assertCount(2, $notifications);
     }
 }
