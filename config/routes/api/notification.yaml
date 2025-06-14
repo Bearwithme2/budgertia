@@ -1,0 +1,4 @@
+api_notifications:
+    resource: '../../src/Controller/NotificationController.php'
+    type: attribute
+

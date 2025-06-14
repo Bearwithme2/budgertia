@@ -57,3 +57,10 @@ async function parseResponse(res) {
 }
 
 module.exports = { buildOptions, isValidJson, parseResponse };
+
+test('buildOptions sets auth header', () => {
+  const opts = buildOptions('POST', 't', '{}');
+  expect(opts.headers.Authorization).toBe('Bearer t');
+  expect(opts.headers['Content-Type']).toBe('application/json');
+  expect(opts.body).toBe('{}');
+});
