@@ -64,3 +64,4 @@ npm run test
 See `docs/API_USAGE.md` for REST API usage.
 See `docs/JWT_KEYS.md` for generating JWT keys.
 See `docs/NOTIFICATIONS.md` for how notifications work.
+See `docs/BUDGET_CHECKER.md` for the budget checker endpoint.
