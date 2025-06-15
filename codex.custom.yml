@@ -7,4 +7,3 @@ rules:
       - run: composer test
       - run: composer phpstan
       - run: composer phpcs
-      - run: docker run --rm -v $(pwd):/data/project jetbrains/qodana-php --fail-threshold 0

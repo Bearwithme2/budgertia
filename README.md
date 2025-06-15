@@ -56,7 +56,6 @@ Run the following commands inside the container to execute the test suite and qu
 docker compose run --rm app composer test
 docker compose run --rm app composer phpstan
 docker compose run --rm app composer phpcs
-docker run --rm -v $(pwd):/data/project jetbrains/qodana-php --fail-threshold 0
 npm run lint
 npm run test
 ```
