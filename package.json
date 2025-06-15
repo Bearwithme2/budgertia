@@ -23,5 +23,8 @@
         "build": "encore production --progress",
         "lint": "eslint assets --ext .js,.vue",
         "test": "jest"
+    },
+    "dependencies": {
+        "pinia": "^3.0.3"
     }
 }

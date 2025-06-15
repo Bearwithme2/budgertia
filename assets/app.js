@@ -8,6 +8,9 @@
 // any CSS you import will output into a single css file (app.css in this case)
 import "./styles/app.css";
 import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 import App from './vue/App.vue';
 
-createApp(App).mount('#app');
+const app = createApp(App);
+app.use(createPinia());
+app.mount('#app');
