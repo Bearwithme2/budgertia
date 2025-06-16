@@ -6,6 +6,8 @@ const { useAuthStore } = require('./auth');
 exports.useNotificationStore = defineStore('notifications', () => {
   const auth = useAuthStore();
   const items = ref([]);
+  let source = null;
+  let poll = 0;
 
   async function fetchList(params = '') {
     const q = params ? `?${params}` : '';
@@ -32,8 +34,47 @@ exports.useNotificationStore = defineStore('notifications', () => {
     }
   }
 
+  function startPolling() {
+    fetchList();
+    poll = setInterval(fetchList, 30000);
+  }
+
+  function connectStream() {
+    if (source || poll) {
+      return;
+    }
+    if (typeof EventSource !== 'undefined') {
+      source = new EventSource(`/api/notifications/stream?token=${auth.token}`);
+      source.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          items.value.unshift({ id: parseInt(e.lastEventId, 10), ...data });
+        } catch {
+          // ignore
+        }
+      };
+      source.onerror = () => {
+        disconnect();
+        startPolling();
+      };
+    } else {
+      startPolling();
+    }
+  }
+
+  function disconnect() {
+    if (source) {
+      source.close();
+      source = null;
+    }
+    if (poll) {
+      clearInterval(poll);
+      poll = 0;
+    }
+  }
+
   const unread = computed(() => items.value.filter(n => !n.isRead).length);
 
-  return { items, unread, fetchList, markRead, markAllRead };
+  return { items, unread, fetchList, markRead, markAllRead, connectStream, disconnect };
 });
 

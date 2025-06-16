@@ -42,4 +42,12 @@ Returns unread items by default. Pass `isRead=true` to view archived ones.
 
 Streams unread notifications as Server-Sent Events.
 
+## Notification Center UI
+
+After logging in, a bell icon appears in the top-right corner of the app. It
+shows the number of unread notifications. Click the bell to open a dropdown
+listing recent alerts and a **Mark all read** button. The store connects to the
+`/api/notifications/stream` endpoint when possible and falls back to polling the
+list every 30 seconds when SSE is unavailable.
+
 
