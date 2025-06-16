@@ -27,3 +27,19 @@ test('fetchList updates items', async () => {
   expect(store.items).toHaveLength(1);
 });
 
+test('connectStream falls back to polling', () => {
+  const auth = useAuthStore();
+  auth.token = 't';
+  const store = useNotificationStore();
+  jest.useFakeTimers();
+  const spySet = jest.spyOn(global, 'setInterval');
+  global.EventSource = undefined;
+  store.connectStream();
+  expect(spySet).toHaveBeenCalled();
+  jest.advanceTimersByTime(30000);
+  expect(spySet).toHaveBeenCalled();
+  store.disconnect();
+  spySet.mockRestore();
+  jest.useRealTimers();
+});
+
