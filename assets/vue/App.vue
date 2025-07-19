@@ -3,12 +3,12 @@
     <header class="header">
       <NotificationBell />
     </header>
-    <h1>Hello Vue!</h1>
-    <p><a href="/docs">View Documentation</a></p>
+    <DashboardView />
   </div>
 </template>
 
 <script setup>
 import NotificationBell from './components/NotificationBell.vue';
+import DashboardView from './views/DashboardView.vue';
 </script>
 

@@ -1,6 +1,7 @@
 {
     "devDependencies": {
         "@babel/core": "^7.17.0",
+        "@babel/eslint-parser": "^7.28.0",
         "@babel/preset-env": "^7.16.0",
         "@symfony/webpack-encore": "^5.0.0",
         "@vue/compiler-sfc": "^3.5.16",
@@ -21,10 +22,12 @@
         "dev": "encore dev",
         "watch": "encore dev --watch",
         "build": "encore production --progress",
-        "lint": "eslint assets --ext .js,.vue",
+        "lint": "eslint assets",
         "test": "jest"
     },
     "dependencies": {
-        "pinia": "^3.0.3"
+        "pinia": "^3.0.3",
+        "chart.js": "^4.4.1",
+        "vue-chartjs": "^5.3.2"
     }
 }

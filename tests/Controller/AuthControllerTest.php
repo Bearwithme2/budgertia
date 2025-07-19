@@ -11,6 +11,8 @@ use Doctrine\ORM\Tools\SchemaTool;
 
 class AuthControllerTest extends WebTestCase
 {
+    private KernelBrowser $client;
+
     protected static function getKernelClass(): string
     {
         return \App\Kernel::class;
@@ -22,8 +24,8 @@ class AuthControllerTest extends WebTestCase
         if (!extension_loaded('pdo_sqlite')) {
             self::markTestSkipped('pdo_sqlite missing');
         }
-        self::bootKernel();
-        $container = static::getContainer();
+        $this->client = static::createClient();
+        $container = $this->client->getContainer();
         $entityManager = $container->get(EntityManagerInterface::class);
         \assert($entityManager instanceof EntityManagerInterface);
         $schemaTool = new SchemaTool($entityManager);
@@ -34,21 +36,19 @@ class AuthControllerTest extends WebTestCase
 
     public function testRegisterEndpoint(): void
     {
-        /** @var KernelBrowser $client */
-        $client = static::createClient();
-        /* @phpstan-ignore-next-line */
-        $client->request(
+        $this->client->request(
             'POST',
             '/api/register',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
-            json_encode(['email' => 'john@example.com', 'password' => 'secret'])
+            json_encode(['email' => 'john@example.com', 'password' => 'secret123']) ?: ''
         );
 
         $this->assertResponseStatusCodeSame(201);
-        /* @phpstan-ignore-next-line */
-        $data = json_decode($client->getResponse()->getContent(), true);
+        $content = $this->client->getResponse()->getContent();
+        $this->assertIsString($content);
+        $data = json_decode($content, true);
         \assert(is_array($data));
         $this->assertArrayHasKey('token', $data);
     }

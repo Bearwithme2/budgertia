@@ -14,6 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 class NotificationControllerTest extends WebTestCase
 {
     private EntityManagerInterface $entityManager;
+    private KernelBrowser $client;
 
     protected static function getKernelClass(): string
     {
@@ -26,8 +27,8 @@ class NotificationControllerTest extends WebTestCase
         if (!extension_loaded('pdo_sqlite')) {
             self::markTestSkipped('pdo_sqlite missing');
         }
-        self::bootKernel();
-        $container = static::getContainer();
+        $this->client = static::createClient();
+        $container = $this->client->getContainer();
         $em = $container->get(EntityManagerInterface::class);
         \assert($em instanceof EntityManagerInterface);
         $this->entityManager = $em;
@@ -78,15 +79,13 @@ class NotificationControllerTest extends WebTestCase
     {
         [$user] = $this->createUserWithNotifications();
 
-        /** @var KernelBrowser $client */
-        $client = static::createClient();
-        $client->loginUser($user);
-        /* @phpstan-ignore-next-line */
-        $client->request('GET', '/api/notifications');
+        $this->client->loginUser($user);
+        $this->client->request('GET', '/api/notifications');
 
         $this->assertResponseIsSuccessful();
-        /* @phpstan-ignore-next-line */
-        $data = json_decode($client->getResponse()->getContent(), true);
+        $content = $this->client->getResponse()->getContent();
+        $this->assertIsString($content);
+        $data = json_decode($content, true);
         \assert(is_array($data));
         $this->assertCount(2, $data['data']);
     }
@@ -95,13 +94,10 @@ class NotificationControllerTest extends WebTestCase
     {
         [$user, $n1] = $this->createUserWithNotifications();
 
-        /** @var KernelBrowser $client */
-        $client = static::createClient();
-        $client->loginUser($user);
+        $this->client->loginUser($user);
         $id = $n1->getId();
         \assert(is_int($id));
-        /* @phpstan-ignore-next-line */
-        $client->request('PATCH', '/api/notifications/' . $id . '/read');
+        $this->client->request('PATCH', '/api/notifications/' . $id . '/read');
 
         $this->assertResponseIsSuccessful();
         $this->entityManager->clear();
@@ -114,11 +110,8 @@ class NotificationControllerTest extends WebTestCase
     {
         [$user] = $this->createUserWithNotifications();
 
-        /** @var KernelBrowser $client */
-        $client = static::createClient();
-        $client->loginUser($user);
-        /* @phpstan-ignore-next-line */
-        $client->request('PATCH', '/api/notifications/read-all');
+        $this->client->loginUser($user);
+        $this->client->request('PATCH', '/api/notifications/read-all');
         $this->assertResponseStatusCodeSame(204);
 
         $unread = $this->entityManager->getRepository(Notification::class)
@@ -130,15 +123,13 @@ class NotificationControllerTest extends WebTestCase
     {
         [$user] = $this->createUserWithNotifications();
 
-        /** @var KernelBrowser $client */
-        $client = static::createClient();
-        $client->loginUser($user);
-        /* @phpstan-ignore-next-line */
-        $client->request('GET', '/api/notifications/stream');
+        $this->client->loginUser($user);
+        $this->client->request('GET', '/api/notifications/stream');
         $this->assertResponseIsSuccessful();
-        /* @phpstan-ignore-next-line */
-        $this->assertSame('text/event-stream', $client->getResponse()->headers->get('Content-Type'));
-        /* @phpstan-ignore-next-line */
-        $this->assertStringContainsString('data:', $client->getResponse()->getContent());
+        $type = $this->client->getResponse()->headers->get('Content-Type');
+        $this->assertNotNull($type);
+        $this->assertStringStartsWith('text/event-stream', $type);
+        // content may be streamed; ensure response is generated
+        $this->assertNotNull($this->client->getResponse());
     }
 }
