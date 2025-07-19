@@ -6,8 +6,10 @@ namespace App\Controller;
 
 use App\Entity\SavingsGoal;
 use App\Entity\User;
+use App\Dto\SavingsGoalData;
 use App\Service\JsonApi;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,7 +20,8 @@ class SavingsGoalController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private JsonApi $jsonApi
+        private JsonApi $jsonApi,
+        private ValidatorInterface $validator
     ) {
     }
 
@@ -51,12 +54,22 @@ class SavingsGoalController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $payload = is_array($data) ? $data : [];
 
+        $dto = new SavingsGoalData(
+            (int) ($payload['targetAmount'] ?? 0),
+            (int) ($payload['currentAmount'] ?? 0)
+        );
+
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            return new JsonResponse(['message' => 'Invalid data'], 400);
+        }
+
         /** @var User $user */
         $user = $this->getUser();
 
         $goal = new SavingsGoal();
-        $goal->setTargetAmount((int) ($payload['targetAmount'] ?? 0));
-        $goal->setCurrentAmount((int) ($payload['currentAmount'] ?? 0));
+        $goal->setTargetAmount($dto->targetAmount);
+        $goal->setCurrentAmount($dto->currentAmount);
         $goal->setUser($user);
 
         $this->entityManager->persist($goal);
@@ -105,12 +118,19 @@ class SavingsGoalController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
         $payload = is_array($data) ? $data : [];
-        if (isset($payload['targetAmount'])) {
-            $savingsGoal->setTargetAmount((int) $payload['targetAmount']);
+
+        $dto = new SavingsGoalData(
+            isset($payload['targetAmount']) ? (int) $payload['targetAmount'] : $savingsGoal->getTargetAmount(),
+            isset($payload['currentAmount']) ? (int) $payload['currentAmount'] : $savingsGoal->getCurrentAmount()
+        );
+
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            return new JsonResponse(['message' => 'Invalid data'], 400);
         }
-        if (isset($payload['currentAmount'])) {
-            $savingsGoal->setCurrentAmount((int) $payload['currentAmount']);
-        }
+
+        $savingsGoal->setTargetAmount($dto->targetAmount);
+        $savingsGoal->setCurrentAmount($dto->currentAmount);
 
         $this->entityManager->flush();
 

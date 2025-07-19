@@ -7,8 +7,10 @@ namespace App\Controller;
 use App\Entity\Transaction;
 use App\Entity\Category;
 use App\Entity\User;
+use App\Dto\TransactionData;
 use App\Service\JsonApi;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +21,8 @@ class TransactionController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private JsonApi $jsonApi
+        private JsonApi $jsonApi,
+        private ValidatorInterface $validator
     ) {
     }
 
@@ -53,10 +56,21 @@ class TransactionController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         $payload = is_array($data) ? $data : [];
-        $categoryId = $payload['category'] ?? null;
+        $dto = new TransactionData(
+            (int) ($payload['amount'] ?? 0),
+            (string) ($payload['description'] ?? ''),
+            isset($payload['date']) ? new \DateTimeImmutable($payload['date']) : null,
+            isset($payload['category']) ? (int) $payload['category'] : null
+        );
+
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            return new JsonResponse(['message' => 'Invalid data'], 400);
+        }
+
         $category = null;
-        if ($categoryId) {
-            $category = $this->entityManager->find(Category::class, $categoryId);
+        if ($dto->category) {
+            $category = $this->entityManager->find(Category::class, $dto->category);
             if (!$category) {
                 return new JsonResponse(['errors' => [['detail' => 'Category not found']]], 404);
             }
@@ -66,9 +80,9 @@ class TransactionController extends AbstractController
         $user = $this->getUser();
 
         $transaction = new Transaction();
-        $transaction->setAmount((int) ($payload['amount'] ?? 0));
-        $transaction->setDescription((string) ($payload['description'] ?? ''));
-        $transaction->setDate(new \DateTimeImmutable($payload['date'] ?? 'now'));
+        $transaction->setAmount($dto->amount);
+        $transaction->setDescription($dto->description);
+        $transaction->setDate($dto->date);
         $transaction->setUser($user);
         $transaction->setCategory($category);
 
@@ -123,26 +137,34 @@ class TransactionController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $payload = is_array($data) ? $data : [];
 
-        if (isset($payload['amount'])) {
-            $transaction->setAmount((int) $payload['amount']);
+        $categoryField = array_key_exists('category', $payload)
+            ? (isset($payload['category']) ? (int) $payload['category'] : null)
+            : $transaction->getCategory()?->getId();
+
+        $dto = new TransactionData(
+            isset($payload['amount']) ? (int) $payload['amount'] : $transaction->getAmount(),
+            isset($payload['description']) ? (string) $payload['description'] : $transaction->getDescription(),
+            isset($payload['date']) ? new \DateTimeImmutable($payload['date']) : $transaction->getDate(),
+            $categoryField
+        );
+
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            return new JsonResponse(['message' => 'Invalid data'], 400);
         }
-        if (isset($payload['description'])) {
-            $transaction->setDescription((string) $payload['description']);
-        }
-        if (isset($payload['date'])) {
-            $transaction->setDate(new \DateTimeImmutable($payload['date']));
-        }
-        if (array_key_exists('category', $payload)) {
-            $categoryId = $payload['category'];
-            $category = null;
-            if ($categoryId) {
-                $category = $this->entityManager->find(Category::class, $categoryId);
-                if (!$category) {
-                    return new JsonResponse(['errors' => [['detail' => 'Category not found']]], 404);
-                }
+
+        $category = null;
+        if ($dto->category) {
+            $category = $this->entityManager->find(Category::class, $dto->category);
+            if (!$category) {
+                return new JsonResponse(['errors' => [['detail' => 'Category not found']]], 404);
             }
-            $transaction->setCategory($category);
         }
+
+        $transaction->setAmount($dto->amount);
+        $transaction->setDescription($dto->description);
+        $transaction->setDate($dto->date);
+        $transaction->setCategory($category);
 
         $this->entityManager->flush();
 

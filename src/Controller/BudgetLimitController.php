@@ -7,8 +7,10 @@ namespace App\Controller;
 use App\Entity\BudgetLimit;
 use App\Entity\Category;
 use App\Entity\User;
+use App\Dto\BudgetLimitData;
 use App\Service\JsonApi;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +21,8 @@ class BudgetLimitController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private JsonApi $jsonApi
+        private JsonApi $jsonApi,
+        private ValidatorInterface $validator
     ) {
     }
 
@@ -52,7 +55,17 @@ class BudgetLimitController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $payload = is_array($data) ? $data : [];
 
-        $category = $this->entityManager->find(Category::class, $payload['category'] ?? 0);
+        $dto = new BudgetLimitData(
+            (int) ($payload['amount'] ?? 0),
+            (int) ($payload['category'] ?? 0)
+        );
+
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            return new JsonResponse(['message' => 'Invalid data'], 400);
+        }
+
+        $category = $this->entityManager->find(Category::class, $dto->category);
         if (!$category) {
             return new JsonResponse(['errors' => [['detail' => 'Category not found']]], 404);
         }
@@ -61,7 +74,7 @@ class BudgetLimitController extends AbstractController
         $user = $this->getUser();
 
         $limit = new BudgetLimit();
-        $limit->setAmount((int) ($payload['amount'] ?? 0));
+        $limit->setAmount($dto->amount);
         $limit->setCategory($category);
         $limit->setUser($user);
 
@@ -111,16 +124,23 @@ class BudgetLimitController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
         $payload = is_array($data) ? $data : [];
-        if (isset($payload['amount'])) {
-            $budgetLimit->setAmount((int) $payload['amount']);
+        $dto = new BudgetLimitData(
+            isset($payload['amount']) ? (int) $payload['amount'] : $budgetLimit->getAmount(),
+            isset($payload['category']) ? (int) $payload['category'] : (int) $budgetLimit->getCategory()->getId()
+        );
+
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            return new JsonResponse(['message' => 'Invalid data'], 400);
         }
-        if (isset($payload['category'])) {
-            $category = $this->entityManager->find(Category::class, $payload['category']);
-            if (!$category) {
-                return new JsonResponse(['errors' => [['detail' => 'Category not found']]], 404);
-            }
-            $budgetLimit->setCategory($category);
+
+        $category = $this->entityManager->find(Category::class, $dto->category);
+        if (!$category) {
+            return new JsonResponse(['errors' => [['detail' => 'Category not found']]], 404);
         }
+
+        $budgetLimit->setAmount($dto->amount);
+        $budgetLimit->setCategory($category);
 
         $this->entityManager->flush();
 
