@@ -22,5 +22,9 @@ services:
         tags:
             - { name: 'console.command', cron.schedule: '0 0 * * *' }
 
+    App\Http\RequestDtoResolver:
+        tags:
+            - controller.argument_value_resolver
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
