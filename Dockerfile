@@ -4,8 +4,9 @@
 FROM node:18 AS frontend
 
 WORKDIR /app
+ENV NODE_ENV=production
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --omit=dev && npm cache clean --force
 
 COPY assets ./assets
 COPY webpack.config.js ./
