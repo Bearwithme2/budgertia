@@ -76,5 +76,17 @@ final class SavingsGoalControllerTest extends WebTestCase
         $data = json_decode($content, true);
         \assert(is_array($data));
         $this->assertCount(1, $data['data']);
+
+        $goalId = $data['data'][0]['id'] ?? 0;
+        $token = $this->jwt->create($user);
+        $this->client->request('GET', '/api/savings-goals/' . $goalId, [], [], [
+            'HTTP_Authorization' => 'Bearer ' . $token,
+        ]);
+        $this->assertResponseIsSuccessful();
+        $goalContent = $this->client->getResponse()->getContent();
+        \assert(is_string($goalContent));
+        $goalData = json_decode($goalContent, true);
+        \assert(is_array($goalData));
+        $this->assertSame($goalId, $goalData['data']['id']);
     }
 }

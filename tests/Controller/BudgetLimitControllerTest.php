@@ -82,5 +82,17 @@ final class BudgetLimitControllerTest extends WebTestCase
         $data = json_decode($content, true);
         \assert(is_array($data));
         $this->assertCount(1, $data['data']);
+
+        $limitId = $data['data'][0]['id'] ?? 0;
+        $token = $this->jwt->create($user);
+        $this->client->request('GET', '/api/budget-limits/' . $limitId, [], [], [
+            'HTTP_Authorization' => 'Bearer ' . $token,
+        ]);
+        $this->assertResponseIsSuccessful();
+        $showContent = $this->client->getResponse()->getContent();
+        \assert(is_string($showContent));
+        $showData = json_decode($showContent, true);
+        \assert(is_array($showData));
+        $this->assertSame($limitId, $showData['data']['id']);
     }
 }
