@@ -11,6 +11,8 @@ Ensure frontend assets are compiled with `npm run build` before visiting.
 6. Missing or invalid fields will show a red error message above the response.  
 7. JSON responses are prettified for easier reading.
 
+Responses now include a `meta.requestId` so you can trace individual calls.
+
 8. Use `/api/budget-check` to view monthly totals.
 9. Manage alerts via `/api/notifications` and stream updates from `/api/notifications/stream?token=<JWT>`.
 

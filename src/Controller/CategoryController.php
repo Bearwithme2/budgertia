@@ -4,101 +4,63 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Assembler\CategoryAssembler;
+use App\Dto\Request\CategoryCreateRequest;
+use App\Http\ApiResponseFactory;
+use App\Service\CategoryService;
 use App\Entity\Category;
-use App\Service\JsonApi;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/api/categories')]
-class CategoryController extends AbstractController
+final class CategoryController extends AbstractController
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private JsonApi $jsonApi
+        private CategoryService $service,
+        private CategoryAssembler $assembler,
+        private ApiResponseFactory $responseFactory,
     ) {
     }
 
     #[Route('', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $categories = $this->entityManager->getRepository(Category::class)->findAll();
+        $categories = $this->service->list();
+        $data = array_map([$this->assembler, 'toDto'], $categories);
 
-        $items = [];
-        foreach ($categories as $category) {
-            $items[] = [
-                'type' => 'category',
-                'id' => (string) $category->getId(),
-                'attributes' => [
-                    'name' => $category->getName(),
-                ],
-            ];
-        }
-
-        return new JsonResponse($this->jsonApi->collection($items));
+        return $this->responseFactory->create($data);
     }
 
-    /**
-     * @throws \JsonException
-     */
     #[Route('', methods: ['POST'])]
-    public function create(Request $request): JsonResponse
+    public function create(CategoryCreateRequest $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
-        $payload = is_array($data) ? $data : [];
-        $name = isset($payload['name']) ? (string) $payload['name'] : '';
+        $category = $this->service->create($request);
+        $dto = $this->assembler->toDto($category);
 
-        $category = new Category();
-        $category->setName($name);
-        $this->entityManager->persist($category);
-        $this->entityManager->flush();
-
-        $id = $category->getId();
-        \assert(is_int($id));
-
-        return new JsonResponse(
-            $this->jsonApi->item('category', $id, ['name' => $category->getName()]),
-            201
-        );
+        return $this->responseFactory->create($dto, 201);
     }
 
     #[Route('/{id}', methods: ['GET'])]
     public function show(Category $category): JsonResponse
     {
-        $id = $category->getId();
-        \assert(is_int($id));
-
-        return new JsonResponse(
-            $this->jsonApi->item('category', $id, ['name' => $category->getName()])
-        );
+        return $this->responseFactory->create($this->assembler->toDto($category));
     }
 
     #[Route('/{id}', methods: ['PUT'])]
-    public function update(Request $request, Category $category): JsonResponse
+    public function update(CategoryCreateRequest $request, Category $category): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $payload = is_array($data) ? $data : [];
-        if (isset($payload['name'])) {
-            $category->setName((string) $payload['name']);
-        }
-        $this->entityManager->flush();
+        $category->setName($request->getName());
+        $this->service->flush();
 
-        $id = $category->getId();
-        \assert(is_int($id));
-
-        return new JsonResponse(
-            $this->jsonApi->item('category', $id, ['name' => $category->getName()])
-        );
+        return $this->responseFactory->create($this->assembler->toDto($category));
     }
 
     #[Route('/{id}', methods: ['DELETE'])]
     public function delete(Category $category): JsonResponse
     {
-        $this->entityManager->remove($category);
-        $this->entityManager->flush();
+        $this->service->delete($category);
 
-        return new JsonResponse(null, 204);
+        return $this->responseFactory->create([], 204);
     }
 }

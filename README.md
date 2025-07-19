@@ -38,6 +38,12 @@ docker compose run --rm app php bin/console lexik:jwt:generate-keypair --no-inte
     docker compose up --build
     ```
 
+## Architecture
+
+Controllers delegate logic to services. Request bodies are mapped to DTOs via a
+custom argument resolver. Responses are wrapped using `ApiResponseFactory`
+providing a `meta.requestId` for tracing.
+
 The application will be available at [http://localhost:8000](http://localhost:8000).
 
 ## Database & Migrations

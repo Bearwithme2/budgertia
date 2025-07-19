@@ -22,6 +22,8 @@ curl -X POST http://localhost:8000/api/register \
 - `PUT /api/categories/{id}` – update a category
 - `DELETE /api/categories/{id}` – remove a category
 
+All responses now include a `meta.requestId` field alongside the `data` payload.
+
 ## Transaction
 
 - `GET /api/transactions` – list your transactions
