@@ -25,11 +25,11 @@ class TesterControllerTest extends WebTestCase
     {
         /** @var KernelBrowser $client */
         $client = static::createClient();
-        /* @phpstan-ignore-next-line */
         $client->request('GET', '/tester');
 
         $this->assertResponseIsSuccessful();
-        /* @phpstan-ignore-next-line */
-        $this->assertStringContainsString('id="tester"', $client->getResponse()->getContent());
+        $content = $client->getResponse()->getContent();
+        $this->assertIsString($content);
+        $this->assertStringContainsString('id="tester"', $content);
     }
 }

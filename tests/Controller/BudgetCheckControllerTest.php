@@ -16,6 +16,7 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 class BudgetCheckControllerTest extends WebTestCase
 {
     private EntityManagerInterface $entityManager;
+    private KernelBrowser $client;
 
     protected static function getKernelClass(): string
     {
@@ -28,8 +29,8 @@ class BudgetCheckControllerTest extends WebTestCase
         if (!extension_loaded('pdo_sqlite')) {
             self::markTestSkipped('pdo_sqlite missing');
         }
-        self::bootKernel();
-        $container = static::getContainer();
+        $this->client = static::createClient();
+        $container = $this->client->getContainer();
         $em = $container->get(EntityManagerInterface::class);
         \assert($em instanceof EntityManagerInterface);
         $this->entityManager = $em;
@@ -66,15 +67,13 @@ class BudgetCheckControllerTest extends WebTestCase
 
         $this->entityManager->flush();
 
-        /** @var KernelBrowser $client */
-        $client = static::createClient();
-        $client->loginUser($user);
-        /* @phpstan-ignore-next-line */
-        $client->request('GET', '/api/budget-check?month=2025-01');
+        $this->client->loginUser($user);
+        $this->client->request('GET', '/api/budget-check?month=2025-01');
 
         $this->assertResponseIsSuccessful();
-        /* @phpstan-ignore-next-line */
-        $data = json_decode($client->getResponse()->getContent(), true);
+        $content = $this->client->getResponse()->getContent();
+        $this->assertIsString($content);
+        $data = json_decode($content, true);
         \assert(is_array($data));
         $this->assertSame(1, count($data['data']));
         $this->assertSame(50, $data['data'][0]['spent']);
