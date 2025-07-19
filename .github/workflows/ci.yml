@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: xdebug
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-interaction --ignore-platform-req=ext-sodium
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --coverage-clover coverage/phpunit.xml
+
+      - name: Run Jest
+        run: npm run test -- --coverage
+
+      - name: Combine coverage
+        run: |
+          PHP_COVERED=$(php -r '$x=simplexml_load_file("coverage/phpunit.xml");echo (int)$x->project->metrics["coveredstatements"];')
+          PHP_TOTAL=$(php -r '$x=simplexml_load_file("coverage/phpunit.xml");echo (int)$x->project->metrics["statements"];')
+          JEST_COVERED=$(node -e 'const j=require("./coverage/jest/coverage-summary.json");console.log(j.total.lines.covered)')
+          JEST_TOTAL=$(node -e 'const j=require("./coverage/jest/coverage-summary.json");console.log(j.total.lines.total)')
+          COVERED=$((PHP_COVERED+JEST_COVERED))
+          TOTAL=$((PHP_TOTAL+JEST_TOTAL))
+          PERCENT=$(awk "BEGIN {printf \"%.2f\", ($COVERED/$TOTAL)*100}")
+          echo "TOTAL_COVERAGE=$PERCENT" >> $GITHUB_ENV
+
+      - name: Generate coverage badge
+        run: |
+          python - <<'PY'
+import os
+cov=float(os.environ.get('TOTAL_COVERAGE', '0'))
+color='brightgreen' if cov>=90 else 'yellow' if cov>=80 else 'orange' if cov>=50 else 'red'
+svg=f"<svg xmlns='http://www.w3.org/2000/svg' width='120' height='20'><rect width='70' height='20' fill='#555'/><rect x='70' width='50' height='20' fill='{color}'/><text x='35' y='14' fill='#fff' font-family='Verdana' font-size='11'>coverage</text><text x='95' y='14' fill='#fff' font-family='Verdana' font-size='11'>{cov:.1f}%</text></svg>"
+open('coverage/badge.svg','w').write(svg)
+PY
+          echo "![Coverage](badge.svg)" > coverage/BADGE.md
+
+      - name: Fail if coverage below 80%
+        run: |
+          echo "Total coverage: ${{ env.TOTAL_COVERAGE }}%"
+          python - <<'PY'
+import os, sys
+cov=float(os.environ.get('TOTAL_COVERAGE', '0'))
+sys.exit(0 if cov >= 80 else 1)
+PY
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
